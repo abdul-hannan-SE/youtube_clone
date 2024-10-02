@@ -16,7 +16,7 @@ const signUp = asyncHandler(async (req, res) => {
     throw new ApiError(422, message, "Vaalidation Error");
   }
 
-  const { username, email, password } = req.body;
+  const { username, email, password, fullName } = req.body;
   let hashedPassword;
   try {
     hashedPassword = await bcrypt.hash(password, 10);
@@ -32,13 +32,19 @@ const signUp = asyncHandler(async (req, res) => {
     username: username,
     email: email,
     password: hashedPassword,
+    fullName: fullName,
   });
-  if (req.file) {
-    newUser.imageUrl =
-      "http://localhost:3000/resources/images/" + req.file.filename;
-  } else {
-    throw new ApiError(400, "Image is required,");
+
+  if (!req.files || !req.files.avatar) {
+    throw new ApiError(400, "Avatar image is required.");
   }
+  newUser.avatar =
+    "http://localhost:3000/resources/images/" + req.files.avatar.filename;
+  if (req.files.coverImage) {
+    newUser.coverImage =
+      "http://localhost:3000/resources/images/" + req.files.coverImage.filename;
+  }
+
   await newUser.save();
   return res.status(201).json(
     new ApiResponse(200, "User created successfully", {
@@ -149,34 +155,80 @@ const refreshToken = asyncHandler(async (req, res) => {
   });
 });
 
-const updateProfilePic = asyncHandler(async (req, res) => {
+const updateProfilePics = asyncHandler(async (req, res) => {
   try {
     const user = req.user;
-    if (!req.file) {
-      throw new ApiError(404, "Image file is not attached", "Multer error");
+
+    // Check if avatar file is attached
+    if (!req.files || !req.files.avatar) {
+      throw new ApiError(
+        404,
+        "Avatar image file is not attached",
+        "Multer error"
+      );
     }
-    const oldImagePath = req.user.imageUrl.replace(
+
+    // Prepare paths for the new avatar and cover image
+    const newAvatarPath =
+      "http://localhost:3000/resources/images/" + req.files.avatar.filename;
+    const oldAvatarPath = user.avatar?.replace(
       "http://localhost:3000/resources/images/",
       ""
     );
-    const imageUrl =
-      "http://localhost:3000/resources/images/" + req.file.filename;
+
+    user.avatar = newAvatarPath; // Update the user's avatar
+
+    // Handle cover image if provided
+    if (req.files.coverImage) {
+      const newCoverImagePath =
+        "http://localhost:3000/resources/images/" +
+        req.files.coverImage.filename;
+      const oldCoverImagePath = user.coverImage?.replace(
+        "http://localhost:3000/resources/images/",
+        ""
+      );
+
+      user.coverImage = newCoverImagePath; // Update the user's cover image
+
+      // Clear the old cover image if it exists
+      if (oldCoverImagePath) {
+        clearFile(
+          path.join(
+            __dirname,
+            "..",
+            "resources",
+            "images",
+            "profile_pics",
+            oldCoverImagePath
+          )
+        );
+      }
+    }
+
+    // Save the user profile without validation
     await user.save({ validateBeforeSave: false });
-    clearFile(
-      path.join(
-        __dirname,
-        "..",
-        "resources",
-        "images",
-        "profile_pics",
-        oldImagePath
-      )
-    );
-    return res.status(200).json(new ApiResponse(200, "Profile pic updated"));
+
+    // Clear the old avatar file
+    if (oldAvatarPath) {
+      clearFile(
+        path.join(
+          __dirname,
+          "..",
+          "resources",
+          "images",
+          "profile_pics",
+          oldAvatarPath
+        )
+      );
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Profile picture updated successfully"));
   } catch (error) {
     throw new ApiError(
       500,
-      "Failed to update profile pic",
+      "Failed to update profile picture",
       "Internal error",
       error
     );
@@ -207,7 +259,7 @@ module.exports = {
   login,
   logOut,
   refreshToken,
-  updateProfilePic,
+  updateProfilePics,
   changePassword,
   updateUserProfile,
 };

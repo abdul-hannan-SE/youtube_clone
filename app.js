@@ -7,7 +7,7 @@ const cookieParser = require("cookie-parser");
 const URL = process.env.URL;
 const app = express();
 const authRoute = require("./routes/auth.routes");
-const userRoutes = require("./routes/user.routes");
+// const userRoutes = require("./routes/user.routes");
 
 // const morgan = require("morgan");
 
@@ -35,8 +35,6 @@ app.use(
   express.static(path.join(__dirname, "resources", "videos"))
 );
 app.use("/auth", authRoute);
-app.use("/user", userRoutes);
-// app.use(morgan());
 
 app.use((error, req, res, next) => {
   if (!error.statusCode) error.statusCode = 500;

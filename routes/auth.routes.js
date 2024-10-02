@@ -25,7 +25,10 @@ const upload = multer.setFile({
 
 router.post(
   "/signUp",
-  upload.single("profile"),
+  upload.fields([
+    { name: "avatar", maxCount: 1 },
+    { name: "coverImage", maxCount: 1 },
+  ]),
   [
     check("email")
       .trim()
