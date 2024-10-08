@@ -155,12 +155,12 @@ const refreshToken = asyncHandler(async (req, res) => {
   });
 });
 
-const updateProfilePics = asyncHandler(async (req, res) => {
+const updateAvatarImage = asyncHandler(async (req, res) => {
   try {
     const user = req.user;
 
     // Check if avatar file is attached
-    if (!req.files || !req.files.avatar) {
+    if (!req.file) {
       throw new ApiError(
         404,
         "Avatar image file is not attached",
@@ -170,40 +170,13 @@ const updateProfilePics = asyncHandler(async (req, res) => {
 
     // Prepare paths for the new avatar and cover image
     const newAvatarPath =
-      "http://localhost:3000/resources/images/" + req.files.avatar.filename;
+      "http://localhost:3000/resources/images/" + req.file.filename;
     const oldAvatarPath = user.avatar?.replace(
       "http://localhost:3000/resources/images/",
       ""
     );
 
     user.avatar = newAvatarPath; // Update the user's avatar
-
-    // Handle cover image if provided
-    if (req.files.coverImage) {
-      const newCoverImagePath =
-        "http://localhost:3000/resources/images/" +
-        req.files.coverImage.filename;
-      const oldCoverImagePath = user.coverImage?.replace(
-        "http://localhost:3000/resources/images/",
-        ""
-      );
-
-      user.coverImage = newCoverImagePath; // Update the user's cover image
-
-      // Clear the old cover image if it exists
-      if (oldCoverImagePath) {
-        clearFile(
-          path.join(
-            __dirname,
-            "..",
-            "resources",
-            "images",
-            "profile_pics",
-            oldCoverImagePath
-          )
-        );
-      }
-    }
 
     // Save the user profile without validation
     await user.save({ validateBeforeSave: false });
@@ -225,6 +198,53 @@ const updateProfilePics = asyncHandler(async (req, res) => {
     return res
       .status(200)
       .json(new ApiResponse(200, "Profile picture updated successfully"));
+  } catch (error) {
+    throw new ApiError(
+      500,
+      "Failed to update profile picture",
+      "Internal error",
+      error
+    );
+  }
+});
+
+const updateCoverImage = asyncHandler(async (req, res) => {
+  try {
+    const user = req.user;
+
+    // Check if avatar file is attached
+    if (!req.file) {
+      throw new ApiError(
+        404,
+        "Cover image file is not attached",
+        "Multer error"
+      );
+    }
+    const newCoverImagePath =
+      "http://localhost:3000/resources/images/" + req.files.coverImage.filename;
+    const oldCoverImagePath = user.coverImage?.replace(
+      "http://localhost:3000/resources/images/",
+      ""
+    );
+    user.coverImage = newCoverImagePath; // Update the user's cover image
+    await user.save({ validateBeforeSave: false });
+    // Clear the old cover image if it exists
+    if (oldCoverImagePath) {
+      clearFile(
+        path.join(
+          __dirname,
+          "..",
+          "resources",
+          "images",
+          "profile_pics",
+          oldCoverImagePath
+        )
+      );
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Cover Image updated successfully"));
   } catch (error) {
     throw new ApiError(
       500,
@@ -259,7 +279,8 @@ module.exports = {
   login,
   logOut,
   refreshToken,
-  updateProfilePics,
   changePassword,
   updateUserProfile,
+  updateAvatarImage,
+  updateCoverImage,
 };

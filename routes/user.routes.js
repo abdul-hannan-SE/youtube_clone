@@ -1,9 +1,10 @@
-// const express = require("express");
-// const router = express.Router();
+const express = require("express");
+const router = express.Router();
 // const path = require("path");
 // const fs = require("fs");
 // const multer = require("../middlewares/multer");
-// const userController = require("../controllers/userController");
+const userController = require("../controllers/userController");
+const { verifyJWT } = require("../middlewares/jwt");
 // const directoryPath = path.join(__dirname, "..", "resources", "videos");
 
 // fs.mkdirSync(directoryPath, { recursive: true });
@@ -14,5 +15,6 @@
 // });
 
 // router.post("/upload/post", upload.single("video"), userController.uploadPost);
-
-// module.exports = router;
+// router.post("/subscribe/channel");
+router.get("/channel/profile", verifyJWT, userController.getUserChannelProfile);
+module.exports = router;

@@ -2,9 +2,11 @@
 // const { clearFile } = require("../utils/common");
 // const Post = require("../models/post.model");
 // const fs = require("fs");
-// const { ApiError } = require("../utils/ApiError");
-// const { ApiResponse } = require("../utils/ApiResponse");
-// const { asyncHandler } = require("../utils/asyncHandler");
+const { ApiError } = require("../utils/ApiError");
+const { ApiResponse } = require("../utils/ApiResponse");
+const { asyncHandler } = require("../utils/asyncHandler");
+const User = require("../models/user.model");
+
 // const SocketManager = require("../socket/socket");
 
 // exports.uploadPost = asyncHandler(
@@ -59,3 +61,61 @@
 //     });
 //   }
 // )
+
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  const username = req.query.username;
+  const channel = await User.aggregate([
+    { $match: { username: username } },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo",
+      },
+    },
+    {
+      $addFields: {
+        subscribersCount: {
+          $size: "$subscribers",
+        },
+        channelSubscribedToCount: {
+          $size: "$subscribedTo",
+        },
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        username: 1,
+        subscribersCount: 1,
+        isSubscribed: 1,
+        channelSubscribedToCount: 1,
+        avatar: 1,
+        coverImage: 1,
+        subscribers: 1,
+      },
+    },
+  ]);
+
+  if (!channel?.length) throw new ApiError(404, "channel dose not exists");
+  res
+    .status(200)
+    .json(new ApiResponse(200, "User cahnnel fetched", channel[0]));
+});
+
+module.exports = { getUserChannelProfile };
