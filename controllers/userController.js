@@ -6,6 +6,8 @@ const { ApiError } = require("../utils/ApiError");
 const { ApiResponse } = require("../utils/ApiResponse");
 const { asyncHandler } = require("../utils/asyncHandler");
 const User = require("../models/user.model");
+const { default: mongoose } = require("mongoose");
+const Subscription = require("../models/subscription.model");
 
 // const SocketManager = require("../socket/socket");
 
@@ -118,4 +120,59 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "User cahnnel fetched", channel[0]));
 });
 
-module.exports = { getUserChannelProfile };
+const getWatchHistory = asyncHandler(async (req, res) => {
+  const user = await User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Schema.Types.ObjectId(req.user?._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "video",
+        localField: "watchHistory",
+        foreignField: "_id",
+        as: "watchHistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "user",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    avatar: 1,
+                    username: 1,
+                  },
+                },
+              ],
+            },
+          },
+          {
+            $unwind: "$owner",
+          },
+        ],
+      },
+    },
+
+    {
+      $project: {
+        watchHistory: 1,
+        username: 1,
+        fullName: 1,
+        avatar: 1,
+        coverImage: 1,
+      },
+    },
+  ]);
+
+  if (!user?.length) {
+    throw new ApiError(404, "watch history could not found");
+  }
+  res.status(200).json(new ApiResponse(200, "Channel profile fetched"));
+});
+
+module.exports = { getUserChannelProfile, getWatchHistory };
