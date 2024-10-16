@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
+const mongooseAggregatePaginate = require("mongoose-aggregate-paginate-v2");
 
 const commentSchema = new Schema(
   {

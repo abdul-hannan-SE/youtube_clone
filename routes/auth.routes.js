@@ -6,6 +6,7 @@ const path = require("path");
 const { check } = require("express-validator");
 const fs = require("fs");
 const { verifyJWT } = require("../middlewares/jwt");
+
 const directoryPath = path.join(
   __dirname,
   "..",

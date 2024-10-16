@@ -8,6 +8,8 @@ const URL = process.env.URL;
 const app = express();
 const authRoute = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
+const videoRoutes = require("./routes/video.routes");
+const commentsRoutes = require("./routes/comment.routes");
 
 // const morgan = require("morgan");
 
@@ -36,6 +38,8 @@ app.use(
 );
 app.use("/auth", authRoute);
 app.use("/user", userRoutes);
+app.use("/video", videoRoutes);
+app.use("/commet", commentsRoutes);
 app.use((error, req, res, next) => {
   if (!error.statusCode) error.statusCode = 500;
   if (!error.message) error.message = "Something went wrong";
