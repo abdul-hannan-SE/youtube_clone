@@ -10,7 +10,7 @@ const { default: mongoose } = require("mongoose");
 const Subscription = require("../models/subscription.model");
 
 const getUserChannelProfile = asyncHandler(async (req, res) => {
-  const username = req.query.username;
+  const { username } = req.query;
   const channel = await User.aggregate([
     { $match: { username: username } },
     {

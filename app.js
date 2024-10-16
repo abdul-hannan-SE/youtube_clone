@@ -10,7 +10,9 @@ const authRoute = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
 const videoRoutes = require("./routes/video.routes");
 const commentsRoutes = require("./routes/comment.routes");
-
+const likeRoutes = require("./routes/like.video.routes");
+const subsCriptionRoutes = require("./routes/subscription.routes");
+const channelRoutes = require("./routes/channel.routes");
 // const morgan = require("morgan");
 
 const serverInstance = require("http").createServer(app);
@@ -40,6 +42,9 @@ app.use("/auth", authRoute);
 app.use("/user", userRoutes);
 app.use("/video", videoRoutes);
 app.use("/commet", commentsRoutes);
+app.use("/like", likeRoutes);
+app.use("/channel", channelRoutes);
+app.use("/subscription", subsCriptionRoutes);
 app.use((error, req, res, next) => {
   if (!error.statusCode) error.statusCode = 500;
   if (!error.message) error.message = "Something went wrong";

@@ -5,8 +5,8 @@ const path = require("path");
 const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const { asyncHandler } = require("../utils/asyncHandler");
-const { ApiError } = require("../utils/ApiError");
-const { ApiResponse } = require("../utils/ApiResponse");
+const ApiError = require("../utils/ApiError");
+const ApiResponse = require("../utils/ApiResponse");
 const { clearFile } = require("../utils/common");
 
 const signUp = asyncHandler(async (req, res) => {
@@ -29,6 +29,7 @@ const signUp = asyncHandler(async (req, res) => {
   }
 
   const newUser = new User({
+    fullName: fullName,
     username: username,
     email: email,
     password: hashedPassword,

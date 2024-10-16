@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Video = require("../models/video.model.js"); // Remove curly braces for default exports
 const ApiError = require("../utils/ApiError.js");
 const ApiResponse = require("../utils/ApiResponse.js");
-const asyncHandler = require("../utils/asyncHandler.js");
+const { asyncHandler } = require("../utils/asyncHandler.js");
 
 const getChannelStats = asyncHandler(async (req, res) => {
   // TODO: Get the channel stats like total video views, total subscribers, total videos, total likes etc.
