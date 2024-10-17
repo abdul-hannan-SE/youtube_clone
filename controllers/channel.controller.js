@@ -92,16 +92,21 @@ const getChannelVideos = asyncHandler(async (req, res) => {
   const videosAggregation = Video.aggregate([
     {
       $match: {
-        channel: new mongoose.Schema.Types.ObjectId(channelId),
+        channel: channelId,
       },
     },
   ]);
   const options = { limit: limit, page: page };
+
   const videos = await Video.aggregatePaginate(videosAggregation, options);
-  if (!videos?.length) {
-    throw new ApiError(404, "No video found");
-  }
-  res.status(200).json(new ApiResponse(200, "all videos fetched", videos));
+  res.status(200).json(
+    new ApiResponse(200, "all videos fetched", {
+      videos: videos.docs,
+      totalVideos: videos.totalDocs,
+      currentPage: videos.page,
+      lastPage: videos.totalPages,
+    })
+  );
 });
 
 module.exports = { getChannelStats, getChannelVideos };
