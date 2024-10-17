@@ -3,33 +3,23 @@ const Video = require("../models/video.model.js"); // Remove curly braces for de
 const ApiError = require("../utils/ApiError.js");
 const ApiResponse = require("../utils/ApiResponse.js");
 const { asyncHandler } = require("../utils/asyncHandler.js");
-
+const User = require("../models/user.model.js");
 const getChannelStats = asyncHandler(async (req, res) => {
   // TODO: Get the channel stats like total video views, total subscribers, total videos, total likes etc.
   const channelId = req?.user._id;
-  const channel_stats = await Video.aggregate([
-    { $match: { owner: new mongoose.Schema.Types.ObjectId(channelId) } },
+  const channel_stats = await User.aggregate([
+    { $match: { _id: channelId } },
     {
-      $facet: {
-        videos: [
+      $lookup: {
+        from: "video",
+        localField: "_id",
+        foreignField: "owner",
+        as: "channelVideos",
+        pipeline: [
           {
             $project: {
-              title: 1,
               views: 1,
-              isPublished: 1,
-              owner: 1,
-            },
-          },
-        ],
-        totalVideos: [
-          { $count: "totalCount" }, // Count total number of videos after matching
-        ],
-        totalViews: [
-          {
-            $group: {
-              _id: null,
-              totalViews: { $sum: "$views" },
-              totalLikes: { $sum: "$likes" }, // Sum views for all matched videos
+              likes: 1,
             },
           },
         ],
@@ -38,23 +28,57 @@ const getChannelStats = asyncHandler(async (req, res) => {
     {
       $lookup: {
         from: "subscription",
-        localField: "owner",
-        foreignField: "channle",
+        localField: "_id",
+        foreignField: "channel",
         as: "subscribers",
       },
     },
     {
-      $project: {
-        subscribersCount: { $size: "$subscribers" },
-        totalViews: { $arrayElemAt: ["$totalViews.totalViews", 0] },
-        videoCount: { $arrayElemAt: ["$totalVideos.totalCount", 0] },
-        totalLikes: { $arrayElemAt: ["$totalViews.totalLikes", 0] },
+      $addFields: {
+        totalSubscribers: { $size: "$subscribers" },
+        totalVideos: { $size: "$channelVideos" },
       },
+    },
+    {
+      $facet: {
+        viewsAndLikesCount: [
+          {
+            $group: {
+              _id: null,
+              totalViews: { $sum: "$channelVideos.views" },
+              totalLikes: { $sum: "$channelVideos.likes" },
+            },
+          },
+        ],
+        subscribersAndVideosCount: [
+          {
+            $project: {
+              _id: 0,
+              totalSubscribers: 1,
+              totalVideos: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        combinedData: {
+          $mergeObjects: [
+            { $arrayElemAt: ["$viewsAndLikesCount", 0] },
+            { $arrayElemAt: ["$subscribersAndVideosCount", 0] },
+          ],
+        },
+      },
+    },
+    {
+      $replaceRoot: { newRoot: "$combinedData" },
     },
   ]);
 
-  if (!channel_stats?.lenght) {
-    throw new ApiError(404, "Could not found channel");
+  if (!channel_stats?.length) {
+    throw new ApiError(400, "channel not found");
   }
   res
     .status(200)
