@@ -1,13 +1,15 @@
 // In your middleware file (e.g., jwt.js)
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
-const { ApiError } = require("../utils/ApiError");
+const ApiError = require("../utils/ApiError");
 const { asyncHandler } = require("../utils/asyncHandler");
 require("dotenv").config();
 
 exports.verifyJWT = asyncHandler(async (req, _, next) => {
   try {
-    const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
+    const token =
+      req.cookies?.accessToken ||
+      req.header("Authorization")?.replace("Bearer ", "");
     if (!token) {
       throw new ApiError(401, "Access Token not found", "JWT Error");
     }
@@ -16,7 +18,9 @@ exports.verifyJWT = asyncHandler(async (req, _, next) => {
       if (err) {
         throw new ApiError(401, "Authentication Failed", "JWT Error");
       } else {
-        const user = await User.findById(decodedToken?._id).select("-refreshToken -__v");
+        const user = await User.findById(decodedToken?._id).select(
+          "-refreshToken -__v"
+        );
         if (!user) {
           throw new ApiError(401, "Invalid Access Token");
         }
