@@ -89,9 +89,12 @@ const getLikedVideos = asyncHandler(async (req, res) => {
       },
     },
   ]);
-  const likedVideos = Like.aggregatePaginate(likeVideosAggregate, {
+  const likedVideos = await Like.aggregatePaginate(likeVideosAggregate, {
     limit: limit,
     page: page,
+  });
+  res.status(200).json({
+    videos: likedVideos.docs,
   });
 });
 

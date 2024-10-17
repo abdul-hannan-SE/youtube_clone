@@ -1,15 +1,14 @@
 // const SocketManager = require("../socket/socket");
-
+const Video = require("../models/video.model");
 const { asyncHandler } = require("../utils/asyncHandler");
 
 const uploadPost = asyncHandler(async (req, res) => {
   // const socket = SocketManager.getSocket();
   // const io = SocketManager.getIO();
-
-  const userId = req.body.userId;
   // const currentUser = SocketManager.users.find(
   //   (user) => user.userId === userId
   // );
+  const userId = req?.user._id;
   const err = validationResult(req);
   if (!err.isEmpty()) {
     throw new ApiError(422, `${err.message}`);
@@ -36,7 +35,7 @@ const uploadPost = asyncHandler(async (req, res) => {
   });
   readStream.on("end", async () => {
     const { creator, description } = req.body;
-    const newPost = new Post({
+    const newPost = new Video({
       creator: creator,
       description: description,
       videoUrl: "http://localhost:3000/resources/videos/" + req.file.filename,

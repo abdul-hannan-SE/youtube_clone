@@ -14,12 +14,15 @@ const getVideoComments = asyncHandler(async (req, res) => {
   ]);
 
   const comments = await Comment.aggregatePaginate(commentAggregate, options);
-  if (!comments?.length) {
-    throw new ApiError(404, "No comment found");
-  }
-  res
-    .status(200)
-    .json(new ApiResponse(200, "All comments fetched", comments[0]));
+
+  res.status(200).json(
+    new ApiResponse(200, "All comments fetched", {
+      comment: comments.docs,
+      totalComments: comments.totalDocs,
+      currentPage: comments.page,
+      lastPage: comments.totalPages,
+    })
+  );
 });
 
 const addComment = asyncHandler(async (req, res) => {
