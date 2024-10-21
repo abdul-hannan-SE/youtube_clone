@@ -38,6 +38,7 @@ This will start the application in development mode. By default, the server runs
 }
 ```
 this will set cookies and refresh and accessToken (jwt)
+
 3. User Logout
 ``Endpoint``: `POST /auth/logout`
 this will logout from application and remove cookies
