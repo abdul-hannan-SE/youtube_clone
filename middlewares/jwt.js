@@ -2,6 +2,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
 const ApiError = require("../utils/ApiError");
+const SocketManager = require("../socket/socket");
 const { asyncHandler } = require("../utils/asyncHandler");
 require("dotenv").config();
 
@@ -25,6 +26,10 @@ exports.verifyJWT = asyncHandler(async (req, _, next) => {
           throw new ApiError(401, "Invalid Access Token");
         }
         req.user = user;
+
+        const socketManager = new SocketManager();
+        socketManager.emit("user-login");
+
         next();
       }
     });

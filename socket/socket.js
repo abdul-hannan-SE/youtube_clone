@@ -1,23 +1,29 @@
+const EventEmitter = require("events");
 const socketio = require("socket.io");
 
-class SocketManager {
+class SocketManager extends EventEmitter {
   static io = null;
   static socket = null;
   static users = [];
+  constructor() {
+    super();
+    this.on("user-login", (userId) => {
+      if (SocketManager.socket) {
+        SocketManager.addUser(userId, SocketManager.socket.id);
+      }
+    });
+  }
   // Initialize socket.io (Static method)
   static init(httpServer) {
     console.log("Initiated socket connection");
-
     SocketManager.io = socketio(httpServer, {
       cors: {
         origin: true,
       },
     });
-
     SocketManager.io.on("connection", (socketIO) => {
       SocketManager.socket = socketIO;
       console.log("Client connected with socket id: ", socketIO.id);
-
       // Event for adding users
       socketIO.on("addUser", (userId) => {
         SocketManager.addUser(userId, socketIO.id);

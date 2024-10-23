@@ -1,15 +1,16 @@
-// const SocketManager = require("../socket/socket");
+const SocketManager = require("../socket/socket");
 const Video = require("../models/video.model");
 const { asyncHandler } = require("../utils/asyncHandler");
 const { Worker } = require("worker_threads");
 
 const uploadPost = asyncHandler(async (req, res) => {
-  // const socket = SocketManager.getSocket();
-  // const io = SocketManager.getIO();
+  const socket = SocketManager.getSocket();
+  const io = SocketManager.getIO();
+  const userId = req?.user._id;
   // const currentUser = SocketManager.users.find(
   //   (user) => user.userId === userId
   // );
-  const userId = req?.user._id;
+
   const err = validationResult(req);
   if (!err.isEmpty()) {
     throw new ApiError(422, `${err.message}`);
@@ -43,6 +44,7 @@ const uploadPost = asyncHandler(async (req, res) => {
     });
 
     await newPost.save();
+    socket.broadcast.emit("new-post", newPost);
     //   io.emit("uploadProgress", { progress: 100 });
 
     res.status(200).json(new ApiResponse(201, "Post created", newPost));
